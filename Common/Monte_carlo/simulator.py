@@ -171,16 +171,14 @@ def run_simulations(
             blocks = []
             pos = 0
             while pos < n:
-                start = rng.integers(0, n)
                 if circular:
                     # Circular: wrap around to avoid edge effects
+                    start = rng.integers(0, n)
                     block = np.array([pnl_values[(start + j) % n] for j in range(block_size)])
                 else:
-                    # Standard: clip at boundary
-                    end = min(start + block_size, n)
-                    block = pnl_values[start:end]
-                    if len(block) < block_size:
-                        block = np.concatenate([block, pnl_values[:block_size - len(block)]])
+                    # Non-circular: only sample blocks that fit within bounds
+                    start = rng.integers(0, max(1, n - block_size + 1))
+                    block = pnl_values[start:start + block_size]
                 blocks.append(block)
                 pos += block_size
             shuffled = np.concatenate(blocks)[:n]

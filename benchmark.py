@@ -90,7 +90,7 @@ def main() -> int:
         figures_dir=FIGURES_DIR,
         mc_seed=MC_SEED,
         mc_block_size=MC_FUNDED_BLOCK_SIZE,
-        mc_circular=False,
+        mc_circular=MC_CHALLENGE_CIRCULAR,
     )
 
     # Step 5: Live phase
