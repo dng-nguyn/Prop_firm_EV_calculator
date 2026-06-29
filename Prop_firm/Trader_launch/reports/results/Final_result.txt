@@ -5,9 +5,9 @@
   Evaluation fee:             $45
 
 ─── Phase Pass Rates (Monte Carlo) ───
-  Challenge phase:            38.74%
+  Challenge phase:            40.62%
   Funded phase:               58.86%
-  Combined (→ live):          22.80%
+  Combined (→ live):          23.91%
 
 ─── Live Phase Results ───
   Account status:             terminated
@@ -15,18 +15,18 @@
   Trader profit (55%):        $1,308.74
 
 ─── Expected Value ───
-  Expected attempts to first payout:   4.39
-  Expected cost to first payout:       $197.35
+  Expected attempts to first payout:   4.18
+  Expected cost to first payout:       $188.21
 
-  Expected value per attempt:           $253.42
-  Expected value per pipeline:        $1,111.39
+  Expected value per attempt:           $267.91
+  Expected value per pipeline:        $1,120.53
 
 ─── Expected Trading Days to First Payout ───
-  Challenge phase (incl. retries):  27.9 days
+  Challenge phase (incl. retries):  23.9 days
   Funded phase:                      4.5 days
   Live phase to first withdrawal:    2 days
   ───────────────────────────────────────────
-  Total:                             34.4 days
+  Total:                             30.5 days
 
 ─── Interpretation ───
   ✅  Positive expected value — the pipeline is profitable on average.
