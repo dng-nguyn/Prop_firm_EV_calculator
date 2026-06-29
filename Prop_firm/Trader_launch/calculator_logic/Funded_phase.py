@@ -321,6 +321,7 @@ def run(
     figures_dir: Optional[Union[str, Path]] = None,
     n_mc_simulations: int = 5_000,
     mc_seed: Optional[int] = None,
+    mc_block_size: int = 1,
 ) -> dict:
     """
     Run the Trader Launch Funded Phase analysis.
@@ -445,6 +446,7 @@ def run(
         profit_target=profit_target,
         n_simulations=n_mc_simulations,
         seed=mc_seed,
+        block_size=mc_block_size,
     )
     log.info("  MC pass rate: %.1f%%  (fail: %.1f%%)", mc_result.pass_rate, mc_result.fail_rate)
 

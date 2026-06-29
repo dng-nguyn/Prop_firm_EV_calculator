@@ -90,6 +90,7 @@ def run_simulations(
     min_trading_days: int = 1,
     seed: Optional[int] = None,
     keep_details: bool = False,
+    block_size: int = 1,
 ) -> SimulationResult:
     """
     Run *n* Monte‑Carlo simulations by randomly shuffling the observed
@@ -124,6 +125,10 @@ def run_simulations(
     keep_details : bool
         If True, store every EODResult in ``run_details`` (memory heavy
         for large ``n_simulations``).
+    block_size : int
+        Size of blocks for block-bootstrap resampling. 1 = pure random
+        shuffle (default). Values > 1 preserve short-term autocorrelation
+        in the daily PnL sequence. Recommended: 5-10 for typical trading data.
 
     Returns
     -------
@@ -154,10 +159,21 @@ def run_simulations(
     max_dds: list[float] = []
     final_pnls: list[float] = []
 
+    n = len(pnl_values)
     for _ in range(n_simulations):
-        # Shuffle daily PnL in-place
-        shuffled = pnl_values.copy()
-        rng.shuffle(shuffled)
+        if block_size <= 1:
+            # Pure random shuffle
+            shuffled = pnl_values.copy()
+            rng.shuffle(shuffled)
+        else:
+            # Block bootstrap: sample contiguous blocks with replacement
+            blocks = []
+            pos = 0
+            while pos < n:
+                start = rng.integers(0, max(1, n - block_size + 1))
+                blocks.append(pnl_values[start:start + block_size])
+                pos += block_size
+            shuffled = np.concatenate(blocks)[:n]
 
         # Call low-level EOD function directly — no fake DataFrame needed
         result = simulate_pnl_sequence(
@@ -224,6 +240,7 @@ def run_full_analysis(
     max_trading_days: Optional[int] = None,
     min_trading_days: int = 1,
     seed: Optional[int] = None,
+    block_size: int = 1,
 ) -> dict:
     """
     Run Monte‑Carlo analysis and return a human‑friendly summary dict.
@@ -271,10 +288,18 @@ def run_full_analysis(
         min_trading_days=min_trading_days,
         seed=seed,
         keep_details=False,
+        block_size=block_size,
     )
 
-    expected_cost = eval_fee * (1.0 + sim_result.fail_rate / 100.0)  # every attempt costs a fee, retries cost more
-    expected_value = (sim_result.pass_rate / 100.0) * profit_target - expected_cost
+    # Correct geometric series: expected_attempts = 1/pass_rate, so expected_cost = fee / pass_rate
+    if sim_result.pass_rate > 0:
+        expected_attempts = 100.0 / sim_result.pass_rate
+        expected_cost = eval_fee * expected_attempts
+        expected_value = profit_target - expected_cost
+    else:
+        expected_attempts = float('inf')
+        expected_cost = float('inf')
+        expected_value = float('-inf')
 
     return {
         "n_simulations": sim_result.n_simulations,
