@@ -52,8 +52,9 @@ from Prop_firm.Trader_launch.calculator_logic.Final_result import (
 
 # Deterministic MC seed
 MC_SEED = 42
-MC_CHALLENGE_BLOCK_SIZE = 10
-MC_FUNDED_BLOCK_SIZE = 1
+MC_CHALLENGE_BLOCK_SIZE = 28
+MC_CHALLENGE_CIRCULAR = True
+MC_FUNDED_BLOCK_SIZE = 6
 
 
 def main() -> int:
@@ -74,6 +75,7 @@ def main() -> int:
         figures_dir=FIGURES_DIR,
         mc_seed=MC_SEED,
         mc_block_size=MC_CHALLENGE_BLOCK_SIZE,
+        mc_circular=MC_CHALLENGE_CIRCULAR,
     )
 
     # Step 3: Funded rules filter
@@ -88,6 +90,7 @@ def main() -> int:
         figures_dir=FIGURES_DIR,
         mc_seed=MC_SEED,
         mc_block_size=MC_FUNDED_BLOCK_SIZE,
+        mc_circular=False,
     )
 
     # Step 5: Live phase

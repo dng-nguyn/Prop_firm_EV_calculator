@@ -91,6 +91,7 @@ def run_simulations(
     seed: Optional[int] = None,
     keep_details: bool = False,
     block_size: int = 1,
+    circular: bool = False,
 ) -> SimulationResult:
     """
     Run *n* Monte‑Carlo simulations by randomly shuffling the observed
@@ -170,8 +171,17 @@ def run_simulations(
             blocks = []
             pos = 0
             while pos < n:
-                start = rng.integers(0, max(1, n - block_size + 1))
-                blocks.append(pnl_values[start:start + block_size])
+                start = rng.integers(0, n)
+                if circular:
+                    # Circular: wrap around to avoid edge effects
+                    block = np.array([pnl_values[(start + j) % n] for j in range(block_size)])
+                else:
+                    # Standard: clip at boundary
+                    end = min(start + block_size, n)
+                    block = pnl_values[start:end]
+                    if len(block) < block_size:
+                        block = np.concatenate([block, pnl_values[:block_size - len(block)]])
+                blocks.append(block)
                 pos += block_size
             shuffled = np.concatenate(blocks)[:n]
 
@@ -289,6 +299,7 @@ def run_full_analysis(
         seed=seed,
         keep_details=False,
         block_size=block_size,
+        circular=circular,
     )
 
     # Correct geometric series: expected_attempts = 1/pass_rate, so expected_cost = fee / pass_rate
