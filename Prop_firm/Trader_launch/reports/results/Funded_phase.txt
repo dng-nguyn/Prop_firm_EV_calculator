@@ -3,30 +3,30 @@
 
 ─── Funded Phase Configuration ───
   Firm:                       Trader Launch
-  Challenge passed on:        2026-02-12
+  Challenge passed on:        2026-01-23
   Starting balance:           $100,000.00
 
 ─── Phase Criteria ───
   [PASS] Profit target
          Required: $1,000
-         Actual:   $1,375.50
+         Actual:   $2,228.00
   [PASS] EOD drawdown (equity < floor)
          Required: Must stay above floor
-         Actual:   Floor=$100,000, Min equity=$99,023
+         Actual:   Floor=$100,000, Min equity=$99,974
 
 ─── EOD Drawdown Floor Details ───
   Initial floor:              $99,000  (start - max_drawdown)
   Final floor:                $100,000
   Floor locked:               True
   Lock threshold:             $101,000  (start + max_drawdown)
-  Floor locked on day:        15
+  Floor locked on day:        4
 
 ─── Detailed Metrics ───
   Starting balance:           $100,000.00
-  Final account equity:       $101,375.50
-  Peak equity:                $101,375.50
-  Total PnL (funded phase):   $1,375.50
-  Max trailing drawdown:      $977.00
+  Final account equity:       $102,228.00
+  Peak equity:                $102,228.00
+  Total PnL (funded phase):   $2,228.00
+  Max trailing drawdown:      $333.50
   Max drawdown parameter:     $1,000
   Profit target:              $1,000
 
@@ -34,8 +34,8 @@
   Result:                     profit_target_reached
   Passed:                     True
   Breached:                   False
-  Days traded (funded):       15
-  Day profit target reached:  15  (2026-03-05)
+  Days traded (funded):       4
+  Day profit target reached:  4  (2026-01-29)
   Day drawdown breached:      None
 
 ─── Notes ───
@@ -47,17 +47,17 @@
 
 ─── Monte Carlo Simulation ───
   Number of simulations:      5,000
-  Pass rate:                  62.06%
-  Fail rate (drawdown):       37.94%
+  Pass rate:                  55.04%
+  Fail rate (drawdown):       44.96%
   Time expired rate:          0.00%
 
   Avg pass days:              4.7
   Median pass days:           4.0
-  Avg fail days:              4.7
-  Avg max drawdown:           $667.31
-  Avg final PnL:              $473.56
+  Avg fail days:              4.8
+  Avg max drawdown:           $734.19
+  Avg final PnL:              $375.03
   Sequence risk: LOW (MC pass rate >= 50%)
 
 ─── Verdict ───
-  OUTCOME: FUNDED PHASE PASSED  (day 15 (2026-03-05))
+  OUTCOME: FUNDED PHASE PASSED  (day 4 (2026-01-29))
   Profit target of $1,000 reached.

@@ -383,18 +383,24 @@ def run(
         funded_eod = funded_result.get("deterministic_run")
         funded_summary = funded_result.get("summary", {})
         funded_passed_day = funded_summary.get("funded_day_target")
+        funded_daily = funded_result.get("daily_pnl")
 
-        if funded_eod is not None and funded_passed_day is not None:
-            funded_daily = funded_result.get("daily_pnl")
-            if funded_daily is not None and funded_passed_day <= len(funded_daily):
+        if funded_eod is not None and funded_passed_day is not None and funded_daily is not None:
+            if funded_passed_day <= len(funded_daily):
                 funded_pass_date = funded_daily.index[funded_passed_day - 1]
                 live_start = (pd.Timestamp(funded_pass_date) + pd.Timedelta(days=1)).tz_localize("UTC")
                 log.info("  Funded passed on day %s (%s)",
                          funded_passed_day, funded_pass_date)
+        elif funded_eod is not None and funded_daily is not None and len(funded_daily) > 0:
+            # Funded failed — use last funded day as live start
+            fallback_day = min(funded_eod.days_traded, len(funded_daily))
+            funded_end_date = funded_daily.index[fallback_day - 1]
+            live_start = (pd.Timestamp(funded_end_date) + pd.Timedelta(days=1)).tz_localize("UTC")
+            log.warning("  Funded NOT passed — using last funded day %d (%s) as live start",
+                        fallback_day, funded_end_date)
 
     if live_start is not None:
         log.info("  Live phase starts: %s", live_start.date())
-        # Filter to trades from the live start date onward
         live_trades = trades[trades.index.normalize() >= live_start].copy()
     else:
         log.info("  No funded result — starting live phase from beginning")

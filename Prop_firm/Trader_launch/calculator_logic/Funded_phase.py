@@ -362,21 +362,27 @@ def run(
 
     # ---- Unpack challenge result ------------------------------------------
     challenge_eod = challenge_result.get("deterministic_run")
-    if challenge_eod is None or not challenge_eod.passed:
-        log.warning("  Challenge phase was NOT passed — funded phase cannot run.")
+    challenge_daily = challenge_result.get("daily_pnl", pd.Series())
+    start_balance = 100_000.0
+
+    if challenge_eod is not None and challenge_eod.passed:
+        challenge_passed_day = challenge_eod.day_profit_target_reached
+        challenge_passed_date = challenge_daily.index[challenge_passed_day - 1]
+        log.info("  Challenge passed on day %d (%s)", challenge_passed_day, challenge_passed_date)
+    elif challenge_eod is not None and len(challenge_daily) > 0:
+        # Challenge failed deterministically — use last challenge day as funded start
+        fallback_day = min(challenge_eod.days_traded, len(challenge_daily))
+        challenge_passed_date = challenge_daily.index[fallback_day - 1]
+        log.warning("  Challenge NOT passed — using last challenge day %d (%s) as funded start",
+                    fallback_day, challenge_passed_date)
+    else:
+        log.warning("  No challenge data available — funded phase cannot run.")
         return {
             "deterministic_run": None,
             "daily_pnl": None,
             "summary": {"status": "skipped", "reason": "challenge_not_passed"},
         }
 
-    challenge_passed_day = challenge_eod.day_profit_target_reached
-    challenge_passed_date = challenge_result.get("daily_pnl", pd.Series()).index[
-        challenge_passed_day - 1
-    ]
-    start_balance = 100_000.0
-
-    log.info("  Challenge passed on day %d (%s)", challenge_passed_day, challenge_passed_date)
     log.info("  Starting balance: $%.2f  (reset to $100k for funded phase)", start_balance)
 
     # ---- Load rules -------------------------------------------------------

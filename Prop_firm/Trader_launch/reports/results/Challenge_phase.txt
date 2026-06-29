@@ -8,80 +8,78 @@
   Activation fee:             $0
 
 ─── Phase Criteria ───
-  [PASS] Profit target
+  [FAIL] Profit target
          Required: $2,000
-         Actual:   $2,122.00
-  [PASS] EOD drawdown (equity < floor)
+         Actual:   $-1,098.50
+  [FAIL] EOD drawdown (equity < floor)
          Required: Must stay above floor
-         Actual:   Floor=$100,000, Min equity=$99,673
+         Actual:   Floor=$99,000, Min equity=$98,902
   [PASS] Min trading days
          Required: 3
-         Actual:   18
+         Actual:   4
   [PASS] Max trading days (initial)
          Required: 60
-         Actual:   18 used
+         Actual:   4 used
   [PASS] Consistency rule
          Required: 40% max single day
-         Actual:   5.37%
+         Actual:   6.34%
   [PASS] Max contracts per trade
          Required: 5
          Actual:   checked in rules filter
 
 ─── EOD Drawdown Floor Details ───
   Initial floor:              $99,000  (start - max_drawdown)
-  Final floor:                $100,000
-  Floor locked:               True
+  Final floor:                $99,000
+  Floor locked:               False
   Lock threshold:             $101,000  (start + max_drawdown)
-  Floor locked on day:        11  (2026-02-03)
 
 ─── Detailed Metrics ───
   Start balance:              $100,000.00
-  Final equity:               $102,122.00
-  Peak equity:                $102,122.00
-  Total PnL:                  $2,122.00
-  Max trailing drawdown:      $999.00  (peak − equity, informational)
+  Final equity:               $98,901.50
+  Peak equity:                $100,000.00
+  Total PnL:                  $-1,098.50
+  Max trailing drawdown:      $1,098.50  (peak − equity, informational)
   Max drawdown parameter:     $1,000  (floor trails this far below peak)
   Profit target:              $2,000
 
 ─── Deterministic Run ───
-  Result:                     profit_target_reached
-  Passed:                     True
-  Breached:                   False
-  Days traded:                18
-  Day profit target reached:  18  (2026-02-12)
-  Day drawdown breached:      None
+  Result:                     drawdown_breach
+  Passed:                     False
+  Breached:                   True
+  Days traded:                4
+  Day profit target reached:  None
+  Day drawdown breached:      4  (2026-01-23)
 
 ─── Consistency Rule Detail ───
   Passed:                     True
-  Max day profit (%):         5.37%
+  Max day profit (%):         6.34%
   Max day date:               2026-01-29
   Max day PnL:                $800.00
-  Total gross profit:         $14,899.50
+  Total gross profit:         $12,627.50
   Limit:                      40.0%
 
 ─── Daily Lock Rule Detail ───
   Triggered:                  True
   Lock threshold:             $800  (profit_target × 40%)
-  Locked days:                12 / 60
-  Trades removed:             39
-  Trades kept:                663
+  Locked days:                9 / 60
+  Trades removed:             11
+  Trades kept:                691
 
 ─── Monte Carlo Simulation ───
   Number of simulations:      5,000
-  Pass rate:                  44.34%
-  Fail rate (drawdown):       55.66%
+  Pass rate:                  25.38%
+  Fail rate (drawdown):       74.62%
   Time expired rate:          0.00%
 
-  Avg pass days:              10.9
+  Avg pass days:              11.3
   Median pass days:           10.0
-  Avg fail days:              7.0
-  Avg max drawdown:           $1,018.52
-  Avg final PnL:              $587.57
+  Avg fail days:              7.3
+  Avg max drawdown:           $1,180.07
+  Avg final PnL:              $-12.98
   Evaluation fee:             $45.00
 
 ─── Verdict ───
-  OUTCOME: CHALLENGE PASSED
-  All criteria met on the deterministic run.
+  OUTCOME: CHALLENGE FAILED - review criteria above
   Sequence risk: MODERATE (MC pass rate 25-50%)
 
 ─── Notes ───
