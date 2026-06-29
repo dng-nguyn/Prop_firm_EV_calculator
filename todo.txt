@@ -1,0 +1,5 @@
+consistancy rules, inactivity rules, maximum minimum lot size tách lên tiếp
+
+Check lại consistancy rule, đang tính k đúng
+
+Bắt phải dừng lại sau khi thi xong challenge

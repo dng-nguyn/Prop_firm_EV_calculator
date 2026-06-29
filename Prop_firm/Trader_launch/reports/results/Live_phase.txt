@@ -1,0 +1,30 @@
+# Trader Launch — Live Funded Phase Results
+# ===========================================
+
+─── Live Phase Configuration ───
+  Starting balance:           $101,000
+  Withdrawal threshold:        $101,200 (keep $101,000 buffer)
+  Termination threshold:       $100,000
+  Profit split (trader):       55%
+
+─── Results ───
+  Account status:             terminated
+  Days traded:                5
+  Final balance:              $99,459.00
+  Total withdrawn:            $1,699.00
+  Trader profit (55%):        $934.46
+  Number of withdrawals:      2
+
+─── Termination ───
+  Terminated on day:          5  (2026-03-12)
+  Final balance:              $99,459.00
+
+─── Withdrawal History ───
+  Day  Date         Balance Before  Withdrawn  Trader Gets  Balance After
+  ───  ──────────  ─────────────  ─────────  ───────────  ─────────────
+    1  2026-03-06  $101,888.50   $ 888.50  $   488.68  $101,000.00
+    2  2026-03-09  $101,810.50   $ 810.50  $   445.78  $101,000.00
+
+─── Verdict ───
+  OUTCOME: LIVE ACCOUNT TERMINATED on day 5
+  Balance dropped to $99,459.00 (≤ $100,000)

@@ -1,0 +1,47 @@
+# Trader Launch Trading Rules
+# ============================
+# Define the specific trading rules for Trader Launch Challenge and Funded phases here.
+
+# Sources:
+https://discord.com/channels/1085741516653342780/1256333560181297222
+Trader_launch discord, faq
+
+
+Unmesurable rules:
+19. Are there any rules against scaling into a position/ averaging?
+
+Scaling & Averaging Rules
+Traders may scale into positions as part of a consistent strategy. Limited averaging is allowed, but must remain secondary to defined stop-loss and risk controls.
+The following are prohibited:
+-Averaging down more than 5 executions per position
+-Increasing position size in a loss-recovery (martingale) pattern
+-Adding repeatedly in lieu of honoring a stop-loss
+Accounts exhibiting excessive averaging behavior may be flagged or paused for review. 
+
+Are there any restricted trading rules?
+24. Yes, Hedging. The only trading based rule is traders can't be short NQ in one account and long NQ in another account or hedging on correlated symbols e.g  short 1 NQ and long 1 ES.
+
+Measurable rules:
+5. What does the 40% consistency rule mean;
+The 40% rule only exists while in the initial evaluation, and is dropped once in the funded stage.
+      What it means is that no single trading day can be greater than 40% of your overall profits     to pass the evaluation. Our system would auto close your trades and lock you out for the day to avoid going above the 40% consistency
+       In a 100k account for example, you shouldn't make more than $800 at the end of one trading day.
+This rule is put in place to help us avoid gamblers. We want traders who show they can be consistent over multiple trades, not get lucky on 1 large single trade.
+
+6. Are there any activation fees?
+We charge ZERO activation fees to our traders! We try to keep the process simple, with no extra hidden charges. The only fees you'll pay with us is the initial evaluation fee. Our evaluation fees are billed monthly until a trader passes, at that point billing is paused and no further costs fall on the trader 
+
+23. What is the one- time fee payment update ?
+With the one- time fee payment, you have 60 days to pass your eval account before it breaches. If you're above 50% of the profit target, you'll get another one month extension as TL is seeking for profitable traders. So in the case of the $100k account, if you're above $101,000 after the 60 days time period you'll get another 30 days extension. You still have to place at least 1 trade a week to keep the account active and existing users are to cancel subscription and purchase a new account
+
+7. What is the commission per contract?
+0.5 commissions per contract, not round trip
+
+14. Are there any inactivity rules?
+For the evaluation stage, we have a 3 day minimum trading days.
+Once funded, there are no minimum days before being able to request payout.
+
+15. Are there any inactivity rules?
+Traders must place a minimum of 1 trade per week. If no trades are recorded within a week the account will be deactivated for both eval and funded stages. 
+If you are in the funded stage, have available profits to withdraw and your account is deactivated due to inactivity, you are still eligible for your profits, and will be paid out regardless.
+

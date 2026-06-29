@@ -1,0 +1,29 @@
+# Trader Launch Rule Sets Metadata
+# ==================================
+firm: Trader_launch
+
+general:
+  # Default for NYC session 100k account
+  evaluation_fee: 45 # 60 days rules. Eligible for 30 days extension if above 1k
+  activation_fee: 0    
+  start_hour: 9
+  end_hour: 16
+  inactivity_rule_day: 7 # 1 trade per week (7 days)
+
+phases:
+  challenge:
+    max_total_drawdown: 1000
+    profit_target: 2000
+    min_trading_days: 3
+    max_trading_days_initial: 60
+    max_trading_days_if_above_50%: 90
+    consistency_rule: 40 # (%, lock you out exactly when 40% of that day is reached)
+    minimum_contracts_per_trade: 1
+    maximum_contracts_per_trade: 5
+
+  funded:
+    max_total_drawdown: 1000
+    profit_target: 1000
+
+# After passing challenge phase, you receive funded IMMEDIATELY
+

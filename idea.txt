@@ -1,0 +1,11 @@
+https://www.youtube.com/watch?v=BiTqwX-4rNw&t=377s
+
+Treat this like a strcture product
+
+This is a convex payout structure
+
+Zero EV strategy also works fine
+
+Use monte carlo simulation to calculate %
+
+Write first for traderlaunch then carry on with others

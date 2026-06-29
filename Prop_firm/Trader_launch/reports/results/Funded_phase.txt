@@ -1,0 +1,63 @@
+# Trader Launch — Funded Phase Results
+# ======================================
+
+─── Funded Phase Configuration ───
+  Firm:                       Trader Launch
+  Challenge passed on:        2026-02-12
+  Starting balance:           $100,000.00
+
+─── Phase Criteria ───
+  [PASS] Profit target
+         Required: $1,000
+         Actual:   $1,375.50
+  [PASS] EOD drawdown (equity < floor)
+         Required: Must stay above floor
+         Actual:   Floor=$100,000, Min equity=$99,023
+
+─── EOD Drawdown Floor Details ───
+  Initial floor:              $99,000  (start - max_drawdown)
+  Final floor:                $100,000
+  Floor locked:               True
+  Lock threshold:             $101,000  (start + max_drawdown)
+  Floor locked on day:        15
+
+─── Detailed Metrics ───
+  Starting balance:           $100,000.00
+  Final account equity:       $101,375.50
+  Peak equity:                $101,375.50
+  Total PnL (funded phase):   $1,375.50
+  Max trailing drawdown:      $977.00
+  Max drawdown parameter:     $1,000
+  Profit target:              $1,000
+
+─── Deterministic Run ───
+  Result:                     profit_target_reached
+  Passed:                     True
+  Breached:                   False
+  Days traded (funded):       15
+  Day profit target reached:  15  (2026-03-05)
+  Day drawdown breached:      None
+
+─── Notes ───
+  - The funded phase uses the same EOD trailing drawdown rules.
+  - The consistency rule (40%) does NOT apply in the funded phase.
+  - The daily lock rule does NOT apply in the funded phase.
+  - Trades before the challenge pass date are excluded.
+
+
+─── Monte Carlo Simulation ───
+  Number of simulations:      5,000
+  Pass rate:                  61.00%
+  Fail rate (drawdown):       39.00%
+  Time expired rate:          0.00%
+
+  Avg pass days:              4.5
+  Median pass days:           4.0
+  Avg fail days:              4.8
+  Avg max drawdown:           $673.86
+  Avg final PnL:              $453.24
+  Sequence risk: LOW (MC pass rate >= 50%)
+
+─── Verdict ───
+  OUTCOME: FUNDED PHASE PASSED  (day 15 (2026-03-05))
+  Profit target of $1,000 reached.

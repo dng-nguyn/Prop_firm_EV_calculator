@@ -1,0 +1,17 @@
+# Trader Launch — Payout Rules
+# ==============================
+# Define payout rules for Trader Launch Challenge and Funded phases here.
+
+16. What are the payout rules?
+ - In the $100k account, Once you pass the evaluation and reach the sim funded funded stage you need to make a 1k buffer.
+  
+  - After making the buffer we will pause your trading, and send you a contract and KYC via email before we move you to a live brokerage account with one of our brokers: Interactive Brokers, Ninja Trader or any of the eval platforms.
+   - Your live account balance starts at $101,000 and drawdown locked at $100k.
+   -  You are then eligible for payouts above the 1k buffer zone ($101,000)
+   -  For example: When your account is equal to $101,200, you can withdraw the $200.
+   - There are no payout caps, you can withdraw as little as $200, or $50k all at once.
+   - Minimum payout is $200 before split
+   - Traders receive an 80% or 55% split of their profits.
+   - We currently process payouts in the discord ticket. 
+   -  We process daily payouts using Crypto. (USDT on sol network). The payout is usually processed 1-5 minutes from request. We also pay out via bank transfer, but this can take up to 3 days depending on the bank and is processed only once a week. 
+   

@@ -1,0 +1,12 @@
+# Bulenox — Final Result Metadata
+# ================================
+# Aggregated later for cross-firm comparison.
+firm: Bulenox
+challenge:
+  pass_rate: ~
+  avg_pass_time_days: ~
+  avg_cost_usd: ~
+funded:
+  ...
+final:
+  ...

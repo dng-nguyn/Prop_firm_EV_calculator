@@ -1,0 +1,46 @@
+# Trader Launch — Account Allocation Rules
+# ==========================================
+# Define account allocation rules for Trader Launch Challenge and Funded phases here.
+
+# Sources:
+https://discord.com/channels/1085741516653342780/1256333560181297222
+Trader_launch discord, faq
+
+2. What time can I trade futures with traders launch;
+9:30am - 4pm EST (NYC hours) and 6pm - 4pm EST (Full 22 hours)
+All trades auto close at 4pm EST and trading reopens by 6pm EST for the 22 hours account.
+
+3. What's the profit target for traders launch Evaluation accounts ?
+           For the NYC hours accounts ;
+             100k account - $2000
+             200k account - $3000
+             300k account - $5000
+
+            For the 22 hours accounts ;
+             100k account - $2000
+             200k account - $4000
+             300k account - $6000 
+
+5. What are the contract limits on the accounts ?
+            For the NYC hours accounts ;
+             100k account -  Starts with 5 micros
+             200k account -  Starts with 1 Mini or 10 micros
+             300k account -  Starts with 2 Mini or 20 micros
+
+             For the 22 hours accounts ;
+             100k account - Starts with 2 Mini or 20 micros
+             200k account -  Starts with 4 Mini or 40 micros
+             300k account -  Starts with 6 Mini or 60 micros
+
+23. What are the buffers for the various accounts ?
+Buffer stage Levels:
+
+NY SESSION:
+100k    buffer stage is 1k
+200k   buffer stage is 1k
+300k   buffer stage is 2k
+
+22Hr Sessions:
+100k    buffer stage is 1k
+200k   buffer stage is  2k
+300k   buffer stage is 3k

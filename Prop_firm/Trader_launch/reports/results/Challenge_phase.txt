@@ -1,0 +1,99 @@
+# Trader Launch — Challenge Phase Results
+# ========================================
+
+─── Challenge Configuration ───
+  Firm:                       Trader Launch
+  Account size:               $100,000
+  Evaluation fee:             $45
+  Activation fee:             $0
+
+─── Phase Criteria ───
+  [PASS] Profit target
+         Required: $2,000
+         Actual:   $2,122.00
+  [PASS] EOD drawdown (equity < floor)
+         Required: Must stay above floor
+         Actual:   Floor=$100,000, Min equity=$99,673
+  [PASS] Min trading days
+         Required: 3
+         Actual:   18
+  [PASS] Max trading days (initial)
+         Required: 60
+         Actual:   18 used
+  [PASS] Consistency rule
+         Required: 40% max single day
+         Actual:   5.37%
+  [PASS] Max contracts per trade
+         Required: 5
+         Actual:   checked in rules filter
+
+─── EOD Drawdown Floor Details ───
+  Initial floor:              $99,000  (start - max_drawdown)
+  Final floor:                $100,000
+  Floor locked:               True
+  Lock threshold:             $101,000  (start + max_drawdown)
+  Floor locked on day:        11  (2026-02-03)
+
+─── Detailed Metrics ───
+  Start balance:              $100,000.00
+  Final equity:               $102,122.00
+  Peak equity:                $102,122.00
+  Total PnL:                  $2,122.00
+  Max trailing drawdown:      $999.00  (peak − equity, informational)
+  Max drawdown parameter:     $1,000  (floor trails this far below peak)
+  Profit target:              $2,000
+
+─── Deterministic Run ───
+  Result:                     profit_target_reached
+  Passed:                     True
+  Breached:                   False
+  Days traded:                18
+  Day profit target reached:  18  (2026-02-12)
+  Day drawdown breached:      None
+
+─── Consistency Rule Detail ───
+  Passed:                     True
+  Max day profit (%):         5.37%
+  Max day date:               2026-01-29
+  Max day PnL:                $800.00
+  Total gross profit:         $14,899.50
+  Limit:                      40.0%
+
+─── Daily Lock Rule Detail ───
+  Triggered:                  True
+  Lock threshold:             $800  (profit_target × 40%)
+  Locked days:                12 / 60
+  Trades removed:             39
+  Trades kept:                663
+
+─── Monte Carlo Simulation ───
+  Number of simulations:      5,000
+  Pass rate:                  43.94%
+  Fail rate (drawdown):       56.06%
+  Time expired rate:          0.00%
+
+  Avg pass days:              10.7
+  Median pass days:           9.0
+  Avg fail days:              6.9
+  Avg max drawdown:           $1,026.73
+  Avg final PnL:              $576.05
+  Evaluation fee:             $45.00
+
+─── Verdict ───
+  OUTCOME: CHALLENGE PASSED
+  All criteria met on the deterministic run.
+  Sequence risk: MODERATE (MC pass rate 25-50%)
+
+─── Notes ───
+  - The deterministic run evaluates trades in their actual chronological order.
+  - The Monte Carlo simulation shuffles daily PnLs to assess sequence risk.
+  - Low MC pass rate + deterministic pass = strategy is order-dependent.
+  - High MC pass rate = strategy is robust regardless of PnL ordering.
+
+─── EOD Drawdown Behaviour ───
+  - Floor starts at start_balance - max_drawdown (e.g. $99k).
+  - Floor trails UP when you make profits: floor = peak - max_drawdown.
+  - Floor NEVER moves down when you lose money.
+  - Floor LOCKS at start_balance ($100k) once peak >= start + max_drawdown ($101k).
+  - After locking, available drawdown room can exceed max_drawdown.
+  - Breach occurs when equity < floor (NOT when trailing_dd > max_drawdown).
