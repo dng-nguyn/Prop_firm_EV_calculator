@@ -67,15 +67,15 @@
 
 ─── Monte Carlo Simulation ───
   Number of simulations:      5,000
-  Pass rate:                  40.62%
-  Fail rate (drawdown):       59.38%
+  Pass rate:                  41.36%
+  Fail rate (drawdown):       58.64%
   Time expired rate:          0.00%
 
-  Avg pass days:              12.2
+  Avg pass days:              12.3
   Median pass days:           11.0
-  Avg fail days:              8.1
-  Avg max drawdown:           $1,154.25
-  Avg final PnL:              $390.86
+  Avg fail days:              8.0
+  Avg max drawdown:           $1,146.66
+  Avg final PnL:              $408.84
   Evaluation fee:             $45.00
 
 ─── Verdict ───

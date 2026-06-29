@@ -53,7 +53,7 @@ from Prop_firm.Trader_launch.calculator_logic.Final_result import (
 
 # Deterministic MC seed
 MC_SEED = 42
-MC_CHALLENGE_BLOCK_SIZE = 28
+MC_CHALLENGE_BLOCK_SIZE = 30
 MC_CHALLENGE_CIRCULAR = True
 MC_FUNDED_BLOCK_SIZE = 6
 
