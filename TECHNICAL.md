@@ -409,7 +409,7 @@ Tested 50 different random seeds, each time finding which block size gives the h
 
 Block=28 wins 48% of the time, block=30 wins 46%. Together they dominate 94% of seeds. If block=28 were overfitted, it would not consistently win across different random seeds.
 
-__omp_shell("[Overfit Validation](images/overfit_validation.png)")
+![Overfit Validation](images/overfit_validation.png)
 
 ### Block Size Sensitivity Plateau
 
