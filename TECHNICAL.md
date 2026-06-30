@@ -269,16 +269,25 @@ if day_pnl < 0:
 
 When equity is far from the floor → full loss. When equity is close → loss is scaled down to 5% of normal. This prevents blowups during drawdowns.
 
-### 5-Year Impact
+### Fair Comparison (Same 60-Day Dataset)
+
+| Strategy | Challenge Pass Rate | EV |
+|----------|-------------------|-----|
+| Standard (current) | 42.26% | $1,108.36 |
+| Floor-aware | 42.26% | $1,115.34 |
+
+On the real 60-day dataset, floor-aware sizing improves EV by only $7. The challenge pass rate is identical because the trader's specific PnL sequence doesn't hit the drawdown floor hard enough for the scaling to matter.
+
+### 5-Year Impact (Synthetic Data)
 
 | Strategy | Pass Rate | EV | Profitable Windows |
 |----------|-----------|-----|-------------------|
 | Standard (current) | 38.3% ± 25.7% | $738 | 65/66 (98%) |
 | **Floor-aware** | **56.7% ± 29.0%** | **$1,114** | **66/66 (100%)** |
 
-Floor-aware sizing improves pass rate by +18.4pp and EV by +$376 across 5 years of out-of-sample testing. Every single window is profitable.
+On 5 years of synthetic data (NQ returns scaled to match trader's distribution), floor-aware sizing improves pass rate by +18.4pp and EV by +$376. The improvement is larger because the synthetic data includes more extreme drawdown scenarios where floor-aware scaling prevents blowups.
 
-**Caveat**: This assumes the trader actually adopts floor-aware position sizing. If they don't, the standard metrics apply.
+**Caveat**: The 5-year test uses synthetic daily PnL (NQ returns scaled to match the trader's distribution), not real trade-level data. The improvement may be smaller or larger with real data depending on the trader's actual drawdown patterns. Floor-aware sizing is a strategy change the trader must actively adopt.
 
 ---
 
@@ -329,11 +338,19 @@ live_days_traded         = 26
 pipeline_runtime_s       = 2.3s
 ```
 
-**With floor-aware sizing (recommended)**:
+**With floor-aware sizing (same 60-day dataset)**:
 ```
-ev_per_pipeline_usd      = $1,114 (5-year average)
-challenge_pass_rate      = 56.7% (5-year average)
-profitable_windows       = 100%
+ev_per_pipeline_usd      = $1,115.34
+challenge_pass_rate      = 42.26%
+funded_pass_rate         = 55.06%
+```
+
+**5-year out-of-sample (standard strategy)**:
+```
+mean_pass_rate           = 38.3% ± 25.7%
+mean_ev                  = $738 ± $523
+profitable_windows       = 65/66 (98%)
+pass_rate_range          = 0.0%–99.2%
 ```
 
 **The EV of $1,108.36 should be interpreted as**: "If this trader repeated their 60-day challenge attempt many times with different starting points, the average expected value per pipeline would be $1,108.36." Individual attempts could range from total loss to $1,984 profit depending on market conditions during the attempt.
