@@ -141,6 +141,7 @@ def simulate_pnl_sequence(
     max_daily_loss: Optional[float] = None,
     max_trading_days: Optional[int] = None,
     min_trading_days: int = 1,
+    floor_aware: bool = False,
 ) -> EODResult:
     """
     Walk through a sequence of daily PnL values and evaluate whether the
@@ -213,6 +214,15 @@ def simulate_pnl_sequence(
 
     for day_idx in range(1, n_days + 1):
         day_pnl = arr[day_idx - 1]
+
+        # ---- Floor-aware risk capping ------------------------------------
+        if floor_aware and day_pnl < 0:
+            current_equity = start_balance + cumulative_pnl
+            room = current_equity - floor
+            total_room = max_drawdown
+            if total_room > 0 and room > 0:
+                scale = max(room / total_room, 0.05)
+                day_pnl = day_pnl * scale  # shrink losses near floor
 
         # ---- Max daily loss check (triggers immediate fail) --------------
         if max_daily_loss is not None and day_pnl < -max_daily_loss:

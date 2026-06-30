@@ -9,22 +9,25 @@
 
 ─── Results ───
   Account status:             terminated
-  Days traded:                5
-  Final balance:              $99,459.00
-  Total withdrawn:            $1,699.00
-  Trader profit (55%):        $934.46
-  Number of withdrawals:      2
+  Days traded:                26
+  Final balance:              $99,165.50
+  Total withdrawn:            $2,379.50
+  Trader profit (55%):        $1,308.74
+  Number of withdrawals:      5
 
 ─── Termination ───
-  Terminated on day:          5  (2026-03-12)
-  Final balance:              $99,459.00
+  Terminated on day:          26  (2026-03-06)
+  Final balance:              $99,165.50
 
 ─── Withdrawal History ───
   Day  Date         Balance Before  Withdrawn  Trader Gets  Balance After
   ───  ──────────  ─────────────  ─────────  ───────────  ─────────────
-    1  2026-03-06  $101,888.50   $ 888.50  $   488.68  $101,000.00
-    2  2026-03-09  $101,810.50   $ 810.50  $   445.78  $101,000.00
+    2  2026-02-02  $101,216.50   $ 216.50  $   119.08  $101,000.00
+    3  2026-02-03  $101,774.50   $ 774.50  $   425.98  $101,000.00
+    8  2026-02-10  $101,241.00   $ 241.00  $   132.55  $101,000.00
+   10  2026-02-12  $101,615.50   $ 615.50  $   338.53  $101,000.00
+   20  2026-02-26  $101,532.00   $ 532.00  $   292.60  $101,000.00
 
 ─── Verdict ───
-  OUTCOME: LIVE ACCOUNT TERMINATED on day 5
-  Balance dropped to $99,459.00 (≤ $100,000)
+  OUTCOME: LIVE ACCOUNT TERMINATED on day 26
+  Balance dropped to $99,165.50 (≤ $100,000)

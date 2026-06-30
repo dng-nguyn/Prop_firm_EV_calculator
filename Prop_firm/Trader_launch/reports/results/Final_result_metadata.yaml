@@ -1,23 +1,23 @@
 firm: Trader_launch
 eval_fee_usd: 45.0
 challenge:
-  mc_pass_rate_pct: 43.94
-  expected_attempts: 2.28
-  expected_cost_before_pass_usd: 102.41
+  mc_pass_rate_pct: 42.26
+  expected_attempts: 2.37
+  expected_cost_before_pass_usd: 106.48
 funded:
-  mc_pass_rate_pct: 61.0
+  mc_pass_rate_pct: 53.14
 live:
   account_status: terminated
-  total_withdrawn_usd: 1699.0
-  trader_profit_usd: 934.46
+  total_withdrawn_usd: 2379.5
+  trader_profit_usd: 1308.74
 final:
-  prob_reaching_live_pct: 26.8
-  expected_attempts_to_first_payout: 3.73
-  expected_cost_to_first_payout_usd: 167.89
-  expected_days_to_first_payout: 25.0
+  prob_reaching_live_pct: 22.46
+  expected_attempts_to_first_payout: 4.45
+  expected_cost_to_first_payout_usd: 200.38
+  expected_days_to_first_payout: 29.9
   expected_days_breakdown:
-    challenge_days: 19.4
-    funded_days: 4.5
-    live_days_to_first_withdrawal: 1.0
-  expected_value_per_attempt_usd: 205.47
-  expected_value_per_pipeline_usd: 766.57
+    challenge_days: 23.1
+    funded_days: 4.8
+    live_days_to_first_withdrawal: 2.0
+  expected_value_per_attempt_usd: 248.9
+  expected_value_per_pipeline_usd: 1108.36
