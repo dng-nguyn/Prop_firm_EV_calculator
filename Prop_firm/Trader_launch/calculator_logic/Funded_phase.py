@@ -321,7 +321,7 @@ def run(
     figures_dir: Optional[Union[str, Path]] = None,
     n_mc_simulations: int = 5_000,
     mc_seed: Optional[int] = None,
-    mc_block_size: int = 1,
+    mc_block_size: int = 0,  # 0 = auto-select
     mc_circular: bool = False,
 ) -> dict:
     """

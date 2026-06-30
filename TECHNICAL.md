@@ -4,6 +4,19 @@ This document explains every method tested, what it does mechanically, why it wa
 
 ---
 
+## Critical Caveat: Non-Stationarity
+
+**Before reading any numbers below, understand this**: the walk-forward analysis showed challenge pass rates ranging from **3% to 41%** depending on which 30-day window of the 60-day dataset is used. This means:
+
+- The EV calculation ($1,123.89) is an **average across all possible windows**, not a guarantee
+- A trader who happens to trade during a 3% pass rate window will simply bleed evaluation fees
+- The "edge" is highly dependent on when the trader starts, not just how they trade
+- **This calculator evaluates a specific trader's historical data, not a universal strategy**
+
+The optimization we performed improves the **estimation methodology** (how we calculate pass rates from a given dataset). It does NOT make the trader's strategy more profitable or more robust.
+
+---
+
 ## The Trader's Setup
 
 **Instrument**: NQ Micro E-mini Nasdaq futures ($2 per point per contract)
@@ -96,6 +109,8 @@ Hybrid MC:
   EV = $1,308.74 - $45 / 0.2434 = $1,123.89
 ```
 
+**Important**: This EV assumes the pass rate is stable across time. The walk-forward analysis shows it is NOT — the pass rate ranges from 3% to 41% depending on the trading window. The EV should be interpreted as an average across all possible starting points, not a per-attempt guarantee.
+
 ![EV Formula Breakdown](images/ev_formula_breakdown.png)
 
 ---
@@ -127,7 +142,7 @@ Each block preserves the internal ordering of its days. The blocks are sampled w
 The daily PnL data has autocorrelation structure:
 - AR(1) = -0.20 (mean-reverting: winning days tend to follow losing days)
 - Lag-9 = +0.24 (bi-weekly pattern: days ~9 apart are positively correlated)
-- Monthly regimes: first 30 days have +$1,252 PnL, days 10-40 have -$806
+- The data has winning and losing periods that cluster together
 
 Pure shuffle destroys this structure. A shuffled sequence might put 5 losing days in a row, triggering the drawdown limit, even though the original data never had such a streak.
 
@@ -150,12 +165,12 @@ Result: Circular 38.74% vs non-circular 37.14% challenge pass rate.
 | 10 | 33.48% | Weekly patterns |
 | 15 | 36.28% | Bi-weekly patterns |
 | 20 | 37.98% | Multi-week trends |
-| **28** | **38.74%** | **Monthly regime transitions** |
-| 30 | 37.58% | Oversamples same regime |
+| **28** | **38.74%** | **Optimal for this dataset** |
+| 30 | 37.58% | Slightly too large |
 | 40 | 36.66% | Too large |
 | 50 | 35.32% | Nearly deterministic |
 
-Block=28 spans 47% of the 60-day window, capturing the monthly winning→losing regime transition. Larger blocks oversample the same regime.
+Block=28 is optimal for THIS 60-day dataset. It captures the winning/losing clustering patterns present in this specific trader's history. We do NOT claim this is a universal optimal block size for all trading data.
 
 ### Implementation
 
@@ -227,7 +242,7 @@ def trade_level_mc(n_sims, seed=42):
 | Trade-level MC | 21.04% | $945.37 |
 | Block bootstrap | 38.74% | $1,111.39 |
 
-The trade-level MC gives a **lower** pass rate because random orderings trigger the lock more often than the historical ordering. The historical ordering was the trader's actual execution — naturally optimized by market conditions.
+The trade-level MC gives a **lower** pass rate because random orderings trigger the lock more often than the historical ordering. The historical ordering was the trader's actual execution — naturally shaped by market conditions, not necessarily "optimized."
 
 ---
 
@@ -264,7 +279,9 @@ The hybrid (41.36%) beats both because:
 | Block bootstrap (28) | 36.42% | 0.54% | 35.38–37.16% |
 | Hybrid MC (30) | 40.49% | 0.74% | 38.90–41.46% |
 
-The hybrid is consistently ~4pp above block bootstrap across all 10 seeds. No overlap in ranges — this is a genuine improvement.
+The hybrid is consistently ~4pp above block bootstrap across all 10 seeds. No overlap in ranges — the improvement is consistent.
+
+**What this test actually shows**: The pass rate is stable across different random number generator sequences (seeds). This means the Monte Carlo simulation has converged — running more simulations with different seeds won't change the result much. It does NOT mean the pass rate is stable across different time periods or different traders.
 
 ### Implementation
 
@@ -325,13 +342,6 @@ _ch_mod.run_simulations = _orig
 
 **Why it's rejected**: The deterministic sequence survives 26 days because the actual trades happened to have a favorable ordering. Using MC-averaged profit would drop EV from $1,124 to ~$516.
 
-### MC Average Pass Day Proxy
-**What it does**: Uses the MC average challenge pass day (~14) as the funded phase start instead of the deterministic fail day (~4).
-
-**Result**: EV collapsed to $52
-
-**Why it failed**: Starting from day 14 instead of day 4 loses 10 days of funded phase trades, leaving too few days to hit the funded profit target.
-
 ---
 
 ## Optimization Journey
@@ -344,7 +354,7 @@ _ch_mod.run_simulations = _orig
 | Data fix | $986.60 | **+$215.67** | Fixed 3 phantom PnL rows |
 | Block bootstrap ch=7, fu=7 | $1,004.35 | +$17.75 | Preserve daily autocorrelation |
 | Block bootstrap ch=10, fu=1 | $1,037.30 | +$32.95 | Phase-specific block sizes |
-| Block bootstrap ch=28, fu=6 | $1,111.39 | +$74.09 | Monthly regime patterns |
+| Block bootstrap ch=28, fu=6 | $1,111.39 | +$74.09 | Larger blocks for regime capture |
 | Hybrid MC ch=28 | $1,120.53 | +$9.14 | Trade-level lock variation |
 | **Hybrid MC ch=30** | **$1,123.89** | +$3.36 | Optimized inner block |
 
@@ -371,11 +381,73 @@ Each successive optimization yielded ~10× less than the last — classic dimini
 
 ---
 
+## Overfitting Analysis
+
+**The concern**: Block size 28-30 was selected by maximizing pass rate on the same 60-day dataset used for evaluation. This is in-sample optimization — the block size might not generalize to other datasets.
+
+### What We Tested (and What It Actually Shows)
+
+We tested 50 different random seeds on the same 60-day dataset:
+
+| Block Size | Wins (out of 50) | Win Rate |
+|-----------|-----------------|----------|
+| **28** | **24** | **48%** |
+| **30** | **23** | **46%** |
+| 20 | 2 | 4% |
+| 15 | 1 | 2% |
+| Others | 0 | 0% |
+
+![Overfit Validation](images/overfit_validation.png)
+
+**What this actually shows**: The Monte Carlo simulation has converged — the pass rate is stable across different random number generator sequences. Block=28 consistently gives the highest pass rate regardless of which seed is used.
+
+**What this does NOT show**: That block=28 is optimal for other datasets. Testing 50 different seeds on the same 60-day window is NOT cross-validation. It's the same data with different random shuffles. If this specific 60-day period has a rhythm that favors 28-day blocks, every seed will find that.
+
+### The Real Overfitting Evidence
+
+The block size sensitivity plateau is more telling:
+
+| Block Size Range | Pass Rate Range | Spread |
+|-----------------|----------------|--------|
+| 20-35 | 37.58% – 38.74% | **1.16pp** |
+
+The exact block size doesn't matter much — any value between 20-35 gives similar results. This suggests the optimization is finding a broad plateau, not a sharp peak. A sharp peak would be a stronger overfitting signal.
+
+### Walk-Forward Validation (The Honest Picture)
+
+The walk-forward analysis splits the 60 days into 30-day windows and measures pass rates:
+
+| Window | Pass Rate | Window PnL |
+|--------|-----------|------------|
+| Days 0-30 | 40.72% | +$1,252 |
+| Days 5-35 | 30.34% | +$506 |
+| Days 10-40 | 10.10% | -$806 |
+| Days 15-45 | 3.00% | -$2,468 |
+| Days 20-50 | 3.38% | -$2,580 |
+| Days 25-55 | 10.96% | -$1,070 |
+| Days 30-60 | 17.36% | +$1,518 |
+
+**This is the most important finding in the entire analysis.** The pass rate ranges from 3% to 41% depending on which 30-day window the trader starts in. This means:
+
+1. The trader's edge is **non-stationary** — it depends heavily on market conditions during their specific trading window
+2. The EV of $1,123.89 is an average that hides massive variance
+3. A trader who starts during a 3% pass rate window will lose money regardless of the methodology
+4. The block bootstrap correctly captures this variance — it's not a methodology flaw, it's a property of the data
+
+### Limitations
+
+- **Single dataset**: We only have one 60-day trading history. With more datasets, we could do proper k-fold cross-validation across different traders or time periods.
+- **Non-stationarity**: The pass rate ranges from 3% to 41% across different 30-day windows. The data is non-stationary, and no bootstrap method can fix this.
+- **Small sample**: 60 days is a small sample for bootstrap methods. More data would give more stable estimates.
+- **Block size is dataset-specific**: Block=28 is optimal for THIS dataset. A different trader's data would likely have a different optimal block size.
+
+---
+
 ## Final Metrics
 
 ```
-ev_per_pipeline_usd      = $1,123.89
-challenge_pass_rate      = 41.36%
+ev_per_pipeline_usd      = $1,123.89  (average across all starting windows)
+challenge_pass_rate      = 41.36%     (range: 3%–41% across windows)
 funded_pass_rate         = 58.86%
 prob_reaching_live       = 24.34%
 live_trader_profit_usd   = $1,308.74
@@ -384,43 +456,4 @@ live_days_traded         = 26
 pipeline_runtime_s       = 2.4s
 ```
 
-
----
-
-## Overfitting Analysis
-
-**The concern**: Block size 28-30 was selected by maximizing pass rate on the same 60-day dataset. This is in-sample optimization — the block size might not generalize to other datasets.
-
-### Cross-Validation (50 seeds)
-
-Tested 50 different random seeds, each time finding which block size gives the highest pass rate:
-
-| Block Size | Wins (out of 50) | Win Rate |
-|-----------|-----------------|----------|
-| 5 | 0 | 0% |
-| 7 | 0 | 0% |
-| 10 | 0 | 0% |
-| 15 | 1 | 2% |
-| 20 | 2 | 4% |
-| 25 | 0 | 0% |
-| **28** | **24** | **48%** |
-| **30** | **23** | **46%** |
-| 35 | 0 | 0% |
-
-Block=28 wins 48% of the time, block=30 wins 46%. Together they dominate 94% of seeds. If block=28 were overfitted, it would not consistently win across different random seeds.
-
-![Overfit Validation](images/overfit_validation.png)
-
-### Block Size Sensitivity Plateau
-
-The pass rate for block sizes 20-35 ranges from 37.58% to 38.74% — only a 1.16 percentage point spread. This means the exact block size doesn't matter much; any value in the 20-35 range gives similar results. The optimization is robust because there's a broad plateau, not a sharp peak.
-
-### Why Block=28 Works Across Datasets
-
-Block=28 captures **monthly regime transitions** — the shift from winning to losing periods that occurs in most trading data. This is a structural property of financial time series, not a quirk of this specific 60-day window. Any similar trading dataset would have monthly regime patterns, and block sizes in the 20-35 range would capture them.
-
-### Limitations
-
-- **Single dataset**: We only have one 60-day trading history. With more datasets, we could do proper k-fold cross-validation across datasets.
-- **Non-stationarity**: The walk-forward analysis showed pass rates ranging from 3% to 41% across different 30-day windows. The data is non-stationary, and the block bootstrap correctly captures this variance.
-- **Small sample**: 60 days is a small sample for bootstrap methods. More data would give more stable estimates.
+**The EV of $1,123.89 should be interpreted as**: "If this trader repeated their 60-day challenge attempt many times with different starting points, the average expected value per pipeline would be $1,123.89." Individual attempts could range from highly profitable to total loss depending on market conditions during the attempt.

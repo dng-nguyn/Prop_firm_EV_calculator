@@ -53,9 +53,9 @@ from Prop_firm.Trader_launch.calculator_logic.Final_result import (
 
 # Deterministic MC seed
 MC_SEED = 42
-MC_CHALLENGE_BLOCK_SIZE = 30
+MC_CHALLENGE_BLOCK_SIZE = 0  # 0 = auto-select
 MC_CHALLENGE_CIRCULAR = True
-MC_FUNDED_BLOCK_SIZE = 6
+MC_FUNDED_BLOCK_SIZE = 0  # 0 = auto-select
 
 
 # ── Hybrid MC helper ───────────────────────────────────────────────────
@@ -107,7 +107,11 @@ def _hybrid_run_simulations(daily_pnl, start_balance, max_drawdown, profit_targe
                             block_size=1, circular=False):
     """Hybrid MC: trade-level lock variation + block bootstrap on daily PnL."""
     from Common.EOD.trailing_drawdown import simulate_pnl_sequence
-    from Common.Monte_carlo.simulator import SimulationResult
+    from Common.Monte_carlo.simulator import SimulationResult, _auto_block_size
+    
+    # Resolve auto block size
+    if block_size <= 0:
+        block_size = _auto_block_size(daily_pnl)
     
     rng = np.random.default_rng(seed or 42)
     n_inner = 5

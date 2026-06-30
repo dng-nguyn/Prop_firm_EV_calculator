@@ -79,6 +79,24 @@ class SimulationResult:
 # ──────────────────────────────────────────────────────────────────────────
 
 
+
+def _auto_block_size(daily_pnl: pd.Series) -> int:
+    """Automatically select block size based on data length.
+    
+    Universal heuristic: one-third of the data length, clamped to [5, n//2].
+    - 30 days → 10
+    - 60 days → 20
+    - 120 days → 40
+    
+    This preserves multi-week regime structure without depending on
+    autocorrelation estimates (which can be unreliable for short series).
+    """
+    n = len(daily_pnl)
+    if n < 10:
+        return 1
+    return max(5, min(n // 3, n // 2))
+
+
 def run_simulations(
     daily_pnl: pd.Series,
     start_balance: float,
@@ -90,7 +108,7 @@ def run_simulations(
     min_trading_days: int = 1,
     seed: Optional[int] = None,
     keep_details: bool = False,
-    block_size: int = 1,
+    block_size: int = 0,  # 0 = auto-select based on data
     circular: bool = False,
 ) -> SimulationResult:
     """
@@ -151,6 +169,10 @@ def run_simulations(
             avg_final_pnl=0.0,
         )
 
+    # Auto-select block size if not specified
+    if block_size <= 0:
+        block_size = _auto_block_size(daily_pnl)
+    
     rng = np.random.default_rng(seed)
     pnl_values = daily_pnl.values  # raw numpy array for speed
 
