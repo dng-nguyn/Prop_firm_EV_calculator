@@ -114,6 +114,7 @@ def run_simulations(
     keep_details: bool = False,
     block_size: int = 0,  # 0 = auto-select based on data
     circular: bool = False,
+    floor_aware: bool = False,
 ) -> SimulationResult:
     """
     Run *n* Monte‑Carlo simulations by randomly shuffling the observed
@@ -218,6 +219,7 @@ def run_simulations(
             max_daily_loss=max_daily_loss,
             max_trading_days=max_trading_days,
             min_trading_days=min_trading_days,
+            floor_aware=floor_aware,
         )
 
         results.append(result)

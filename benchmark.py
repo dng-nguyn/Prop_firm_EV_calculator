@@ -55,6 +55,7 @@ from Prop_firm.Trader_launch.calculator_logic.Final_result import (
 MC_SEED = 42
 MC_CHALLENGE_BLOCK_SIZE = 0  # 0 = auto-select
 MC_CHALLENGE_CIRCULAR = True
+MC_FLOOR_AWARE = False
 MC_FUNDED_BLOCK_SIZE = 0  # 0 = auto-select
 
 
@@ -104,7 +105,7 @@ _HYBRID_LOCK_AMOUNT = None
 def _hybrid_run_simulations(daily_pnl, start_balance, max_drawdown, profit_target,
                             n_simulations=10000, max_daily_loss=None, max_trading_days=None,
                             min_trading_days=1, seed=None, keep_details=False,
-                            block_size=1, circular=False):
+                            block_size=1, circular=False, floor_aware=False):
     """Hybrid MC: trade-level lock variation + block bootstrap on daily PnL."""
     from Common.EOD.trailing_drawdown import simulate_pnl_sequence
     from Common.Monte_carlo.simulator import SimulationResult, _auto_block_size
@@ -210,6 +211,7 @@ def main() -> int:
         mc_seed=MC_SEED,
         mc_block_size=MC_CHALLENGE_BLOCK_SIZE,
         mc_circular=MC_CHALLENGE_CIRCULAR,
+        mc_floor_aware=MC_FLOOR_AWARE,
     )
     
     # Restore original for funded phase
@@ -228,6 +230,7 @@ def main() -> int:
         mc_seed=MC_SEED,
         mc_block_size=MC_FUNDED_BLOCK_SIZE,
         mc_circular=MC_CHALLENGE_CIRCULAR,
+        mc_floor_aware=MC_FLOOR_AWARE,
     )
 
     # Step 5: Live phase

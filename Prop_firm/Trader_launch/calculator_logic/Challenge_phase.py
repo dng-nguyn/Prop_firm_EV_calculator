@@ -592,6 +592,7 @@ def run(
     mc_seed: Optional[int] = None,
     mc_block_size: int = 0,  # 0 = auto-select
     mc_circular: bool = False,
+    mc_floor_aware: bool = False,
 ) -> dict:
     """
     Run the Trader Launch Challenge Phase analysis.
@@ -694,6 +695,7 @@ def run(
         seed=mc_seed,
         block_size=mc_block_size,
         circular=mc_circular,
+        floor_aware=mc_floor_aware,
     )
     log.info("  MC pass rate: %.1f%%  (fail: %.1f%%)", mc_result.pass_rate, mc_result.fail_rate)
 
