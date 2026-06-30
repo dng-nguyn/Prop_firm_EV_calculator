@@ -170,7 +170,7 @@ Result: Circular 38.74% vs non-circular 37.14% challenge pass rate.
 | 40 | 36.66% | Too large |
 | 50 | 35.32% | Nearly deterministic |
 
-Block=28 is optimal for THIS 60-day dataset. It captures the winning/losing clustering patterns present in this specific trader's history. We do NOT claim this is a universal optimal block size for all trading data.
+Block=28 is optimal for THIS 60-day dataset. For universal use, the calculator auto-selects block_size = n//3 (one-third of data length), which gives block=20 for 60-day data. This costs ~2% EV vs the hand-optimized value but works for any dataset without tuning.
 
 ### Implementation
 
@@ -446,10 +446,10 @@ The walk-forward analysis splits the 60 days into 30-day windows and measures pa
 ## Final Metrics
 
 ```
-ev_per_pipeline_usd      = $1,123.89  (average across all starting windows)
-challenge_pass_rate      = 41.36%     (range: 3%–41% across windows)
-funded_pass_rate         = 58.86%
-prob_reaching_live       = 24.34%
+ev_per_pipeline_usd      = $1,101.26  (universal auto block size, no dataset-specific tuning)
+challenge_pass_rate      = 41.28%     (range: 3%–41% across windows)
+funded_pass_rate         = 52.54%
+prob_reaching_live       = 21.69%
 live_trader_profit_usd   = $1,308.74
 live_total_withdrawn_usd = $2,379.50
 live_days_traded         = 26

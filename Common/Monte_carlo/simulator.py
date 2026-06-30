@@ -80,21 +80,25 @@ class SimulationResult:
 
 
 
-def _auto_block_size(daily_pnl: pd.Series) -> int:
+def _auto_block_size(daily_pnl: pd.Series, block_fraction: float = 0.0) -> int:
     """Automatically select block size based on data length.
     
-    Universal heuristic: one-third of the data length, clamped to [5, n//2].
-    - 30 days → 10
-    - 60 days → 20
-    - 120 days → 40
+    Default: n//4 (25% of data). Configurable via block_fraction parameter.
+    - 30 days → 7
+    - 42 days → 10
+    - 60 days → 15
+    - 120 days → 30
     
-    This preserves multi-week regime structure without depending on
-    autocorrelation estimates (which can be unreliable for short series).
+    Args:
+        daily_pnl: Daily PnL series
+        block_fraction: Override fraction (0.0 = use default n//4)
     """
     n = len(daily_pnl)
     if n < 10:
         return 1
-    return max(5, min(n // 3, n // 2))
+    if block_fraction > 0:
+        return max(5, min(int(n * block_fraction), n // 2))
+    return max(5, min(n // 4, n // 2))
 
 
 def run_simulations(

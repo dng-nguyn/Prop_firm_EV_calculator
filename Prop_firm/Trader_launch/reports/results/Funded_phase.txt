@@ -47,15 +47,15 @@
 
 ─── Monte Carlo Simulation ───
   Number of simulations:      5,000
-  Pass rate:                  52.54%
-  Fail rate (drawdown):       47.46%
+  Pass rate:                  53.14%
+  Fail rate (drawdown):       46.86%
   Time expired rate:          0.00%
 
-  Avg pass days:              4.6
+  Avg pass days:              4.8
   Median pass days:           4.0
   Avg fail days:              5.9
-  Avg max drawdown:           $843.00
-  Avg final PnL:              $211.31
+  Avg max drawdown:           $821.49
+  Avg final PnL:              $247.91
   Sequence risk: LOW (MC pass rate >= 50%)
 
 ─── Verdict ───
