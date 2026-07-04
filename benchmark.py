@@ -167,6 +167,7 @@ def generate_daily_pnl(
     tick_size: float = 0.25,
     tick_value: float = 5.0,
     entry_delay: int = 0,
+    long_only: bool = False,
 ) -> pd.Series:
     """
     Generate daily PnL from VWAP strategy directly (no Trade objects).
@@ -289,9 +290,10 @@ def generate_daily_pnl(
         # Signal
         if not session_mask[i]:
             continue
-        
         signal = 1 if close[i] > cur_vwap else (-1 if close[i] < cur_vwap else 0)
         if signal == 0:
+            continue
+        if long_only and signal == -1:
             continue
         
         # Entry delay
@@ -412,7 +414,7 @@ def compute_ev(
 # Parameter sweep (single-core, but uses vectorized MC)
 # ═══════════════════════════════════════════════════════════════════════
 
-def sweep_params(df: pd.DataFrame, bar_minutes: int) -> list[dict]:
+def sweep_params(df: pd.DataFrame, bar_minutes: int, long_only: bool = False) -> list[dict]:
     """Sweep stop fractions and sessions for a given bar size. d=0 only."""
     results = []
     for stop in [0.25, 0.50, 0.75, 1.0, 1.5, 2.0]:
@@ -421,6 +423,7 @@ def sweep_params(df: pd.DataFrame, bar_minutes: int) -> list[dict]:
             daily = generate_daily_pnl(
                 df, bar_minutes=bar_minutes, stop_atr_fraction=stop,
                 session=sess, contracts=2, commission=1.50, entry_delay=0,
+                long_only=long_only,
             )
             ev_result = compute_ev(daily)
             elapsed = time.time() - t0
@@ -438,32 +441,27 @@ def sweep_params(df: pd.DataFrame, bar_minutes: int) -> list[dict]:
 # Robustness tests (d=1, d=2 on winning params)
 # ═══════════════════════════════════════════════════════════════════════
 
-def test_robustness(df: pd.DataFrame, bar: int, stop: float, sess: str) -> dict:
+def test_robustness(df: pd.DataFrame, bar: int, stop: float, sess: str, long_only: bool = False) -> dict:
     """Test robustness: delay 1, delay 2, perturbation."""
-    # Baseline (d=0)
-    base_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=0)
+    base_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=0, long_only=long_only)
     base_ev = compute_ev(base_daily)
     
-    # Delay 1
-    d1_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1)
+    d1_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1, long_only=long_only)
     d1_ev = compute_ev(d1_daily)
     
-    # Delay 2
-    d2_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=2)
+    d2_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=2, long_only=long_only)
     d2_ev = compute_ev(d2_daily)
     
-    # Perturbation: add ±1 tick noise to daily PnL
     rng = np.random.default_rng(42)
     perturbed_pnls = []
     for _ in range(20):
-        noise = rng.normal(0, 2.0, len(base_daily))  # ~$2 noise per day
+        noise = rng.normal(0, 2.0, len(base_daily))
         perturbed = base_daily.copy()
         perturbed += noise
         perturbed_pnls.append(compute_ev(perturbed)["ev"])
     
     avg_perturb_ev = np.mean(perturbed_pnls)
     
-    # Degradation
     base = base_ev["ev"]
     d1_deg = (base - d1_ev["ev"]) / abs(base) if base > 0 else 0
     d2_deg = (base - d2_ev["ev"]) / abs(base) if base > 0 else 0
@@ -495,8 +493,8 @@ def main():
     
     # ── Phase 1: Sweep with d=0 ────────────────────────────────────────
     print(f"\n--- PHASE 1: d=0 SWEEP ---")
-    r5 = sweep_params(df, 5)
-    r15 = sweep_params(df, 15)
+    r5 = sweep_params(df, 5, long_only=True)
+    r15 = sweep_params(df, 15, long_only=True)
     d0_df = pd.DataFrame(r5 + r15).sort_values('ev', ascending=False)
     top3 = d0_df.head(3)
     print(f"\n  Top 3 (d=0):")
@@ -508,7 +506,7 @@ def main():
     d1_results = []
     for _, r in top3.iterrows():
         daily = generate_daily_pnl(df, int(r.bar), r.stop, r.session,
-                                   contracts=2, commission=1.50, entry_delay=1)
+                                   contracts=2, commission=1.50, entry_delay=1, long_only=True)
         ev = compute_ev(daily, n_mc=N_MC)
         d1_results.append({"bar": int(r.bar), "stop": r.stop, "session": r.session,
                            "d0_ev": r.ev, "d1_ev": ev["ev"], "d1_chal": ev["chal_rate"],
@@ -525,7 +523,7 @@ def main():
     
     # ── Phase 3: Full robustness ────────────────────────────────────────
     print(f"\n--- PHASE 3: ROBUSTNESS ---")
-    rob = test_robustness(df, bar, stop, sess)
+    rob = test_robustness(df, bar, stop, sess, long_only=True)
     print(f"  d=0: EV=${rob['base_ev']:.0f} ({rob['base_chal']:.0%}×{rob['base_fund']:.0%})")
     print(f"  d=1: EV=${rob['d1_ev']:.0f} (deg: {rob['d1_deg']:.0%})")
     print(f"  d=2: EV=${rob['d2_ev']:.0f} (deg: {rob['d2_deg']:.0%})")
@@ -539,7 +537,7 @@ def main():
     df_old = df_old[df_old.index < "2020-01-01"].copy()
     heldout = {"ev": 0, "chal_rate": 0, "fund_rate": 0, "live_profit": 0}
     if len(df_old) > 0:
-        val_daily = generate_daily_pnl(df_old, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1)
+        val_daily = generate_daily_pnl(df_old, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1, long_only=True)
         heldout = compute_ev(val_daily, n_mc=N_MC)
         print(f"  EV=${heldout['ev']:.0f} ({heldout['chal_rate']:.0%}×{heldout['fund_rate']:.0%} "
               f"live=${heldout['live_profit']:.0f} n={len(val_daily)} days)")
