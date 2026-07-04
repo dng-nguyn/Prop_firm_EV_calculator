@@ -169,6 +169,8 @@ def generate_daily_pnl(
     entry_delay: int = 0,
     long_only: bool = False,
     vol_filter: float = 0.0,
+    vol_target: bool = False,
+    min_vwap_dist_atr: float = 0.0,
 ) -> pd.Series:
     """
     Generate daily PnL from VWAP strategy directly (no Trade objects).
@@ -230,6 +232,11 @@ def generate_daily_pnl(
     # Map ATR to intraday
     atr = atr_daily[group_id]
     
+    # Vol targeting: median ATR for contract scaling
+    if vol_target:
+        positive_atr = atr_daily[atr_daily > 0]
+        median_atr = float(np.median(positive_atr)) if len(positive_atr) > 0 else 1.0
+    
     # Volume filter: compute rolling daily avg volume
     if vol_filter > 0:
         daily_avg_vol = np.zeros(group_id[-1] + 1)
@@ -247,7 +254,7 @@ def generate_daily_pnl(
     else:
         session_mask = np.array([(dtime(9, 30) <= t <= dtime(15, 45)) for t in times])
     
-    eod_mask = np.array([t >= dtime(16, 0) for t in times])
+    eod_mask = np.array([t >= dtime(15, 45) for t in times])
     
     # Generate trades
     close = bars["close"].values.astype("float64")
@@ -258,6 +265,7 @@ def generate_daily_pnl(
     
     in_position = False
     side = 0  # 1=long, -1=short
+    effective_contracts = contracts
     entry_px = 0.0
     stop_px = 0.0
     entry_day = None
@@ -275,7 +283,7 @@ def generate_daily_pnl(
         # EOD exit
         if in_position and eod_mask[i]:
             pnl_ticks = (close[i] - entry_px) / tick_size * side
-            pnl_dollars = pnl_ticks * tick_value * contracts - commission * 2 * contracts
+            pnl_dollars = pnl_ticks * tick_value * effective_contracts - commission * 2 * effective_contracts
             daily_pnl_dict.setdefault(entry_day, 0.0)
             daily_pnl_dict[cur_date] = daily_pnl_dict.get(cur_date, 0.0) + pnl_dollars
             in_position = False
@@ -293,7 +301,7 @@ def generate_daily_pnl(
             
             if hit_stop:
                 pnl_ticks = (exit_px - entry_px) / tick_size * side
-                pnl_dollars = pnl_ticks * tick_value * contracts - commission * 2 * contracts
+                pnl_dollars = pnl_ticks * tick_value * effective_contracts - commission * 2 * effective_contracts
                 daily_pnl_dict[cur_date] = daily_pnl_dict.get(cur_date, 0.0) + pnl_dollars
                 in_position = False
             continue
@@ -308,6 +316,10 @@ def generate_daily_pnl(
             continue
         if vol_filter > 0 and vol[i] < vol_threshold[i]:
             continue
+        # VWAP distance filter
+        if min_vwap_dist_atr > 0 and cur_atr > 0:
+            if abs(close[i] - cur_vwap) < min_vwap_dist_atr * cur_atr:
+                continue
         
         # Entry delay
         if signal != pending_signal:
@@ -326,6 +338,12 @@ def generate_daily_pnl(
         stop_dist = cur_atr * stop_atr_fraction if cur_atr > 0 else 10 * tick_size
         stop_px = entry_px - stop_dist * side
         
+        # Vol targeting: scale contracts inversely with ATR
+        if vol_target and cur_atr > 0:
+            effective_contracts = max(1, round(contracts * median_atr / cur_atr))
+        else:
+            effective_contracts = contracts
+        
         in_position = True
         pending_signal = 0
         signal_count = 0
@@ -333,7 +351,7 @@ def generate_daily_pnl(
     # Close any remaining position at last bar
     if in_position:
         pnl_ticks = (close[-1] - entry_px) / tick_size * side
-        pnl_dollars = pnl_ticks * tick_value * contracts - commission * 2 * contracts
+        pnl_dollars = pnl_ticks * tick_value * effective_contracts - commission * 2 * effective_contracts
         daily_pnl_dict[entry_day] = daily_pnl_dict.get(entry_day, 0.0) + pnl_dollars
     
     if not daily_pnl_dict:
@@ -361,7 +379,9 @@ def compute_ev(
     - Consistency: check 40% rule
     """
     if len(daily_pnl) < 10:
-        return {"ev": -fee, "chal_rate": 0, "fund_rate": 0, "live_profit": 0, "n_days": 0}
+        return {"ev": -fee, "chal_rate": 0, "fund_rate": 0, "pipeline_rate": 0,
+                "expected_attempts": float('inf'), "live_profit": 0, "consistency_pass": True,
+                "n_days": len(daily_pnl), "n_trades": 0}
     
     pnl = daily_pnl.values.astype(np.float64)
     
@@ -380,7 +400,9 @@ def compute_ev(
     chal_rate = chal["pass_rate"] / 100.0
     
     if chal_rate < 0.01:
-        return {"ev": -fee, "chal_rate": chal_rate, "fund_rate": 0, "live_profit": 0, "n_days": len(pnl)}
+        return {"ev": -fee, "chal_rate": chal_rate, "fund_rate": 0, "pipeline_rate": 0,
+                "expected_attempts": float('inf'), "live_profit": 0, "consistency_pass": True,
+                "n_days": len(pnl), "n_trades": (pnl != 0).sum()}
     
     # Funded phase MC: only use days AFTER median challenge pass day
     pass_day_arr = chal["pass_day_arr"]
@@ -561,6 +583,23 @@ def main():
               f"live=${heldout['live_profit']:.0f} n={len(val_daily)} days)")
         print(f"  {'✓ Profitable' if heldout['ev'] > 0 else '✗ Not profitable'}")
     
+    # ── Artifact saving ────────────────────────────────────────────────
+    import subprocess
+    run_id = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=str(PROJECT_ROOT)).decode().strip()
+    artifact_dir = PROJECT_ROOT / "reports" / "runs" / run_id
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    
+    from charts import generate_trade_details, plot_execution_charts
+    trades_df = generate_trade_details(df, bar, stop, sess, contracts=2, commission=1.50,
+                                        entry_delay=1, long_only=True)
+    if len(trades_df) > 0:
+        trades_df.to_csv(artifact_dir / "trades.csv", index=False)
+    
+    daily_for_charts = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50,
+                                          entry_delay=1, long_only=True)
+    plot_execution_charts(df, trades_df, daily_for_charts, artifact_dir,
+                         title_prefix=f"VWAP {bar}m {sess} stop={stop}×ATR long-only")
+    
     # ── METRIC output ──────────────────────────────────────────────────
     print(f"METRIC ev_per_pipeline={rob['base_ev']:.2f}")
     print(f"METRIC robust_ev={rob['d1_ev']:.2f}")
@@ -574,6 +613,7 @@ def main():
     print(f"METRIC delay2_degradation={rob['d2_deg']:.4f}")
     print(f"METRIC perturb_degradation={rob['perturb_deg']:.4f}")
     print(f"METRIC heldout_ev={heldout['ev']:.2f}")
+    print(f"METRIC artifact_dir={artifact_dir}")
 
 
 if __name__ == "__main__":

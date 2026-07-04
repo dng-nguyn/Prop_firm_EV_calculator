@@ -94,7 +94,7 @@ def generate_trade_details(
         session_mask = np.array([(dtime(9, 30) <= t <= dtime(12, 0)) for t in times])
     else:
         session_mask = np.array([(dtime(9, 30) <= t <= dtime(15, 45)) for t in times])
-    eod_mask = np.array([t >= dtime(16, 0) for t in times])
+    eod_mask = np.array([t >= dtime(15, 45) for t in times])
 
     close = bars["close"].values.astype("float64")
     high = bars["high"].values.astype("float64")
