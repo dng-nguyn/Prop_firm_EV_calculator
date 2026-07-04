@@ -531,34 +531,36 @@ def main():
     print(f"\nLoaded {len(df):,} bars ({df.index[0].date()} to {df.index[-1].date()}) "
           f"[{time.time()-t0:.0f}s, {df.memory_usage(deep=True).sum()/1e6:.0f}MB]")
     
-    # ── Phase 1: Sweep with d=0 ────────────────────────────────────────
-    print(f"\n--- PHASE 1: d=0 SWEEP ---")
-    r5 = sweep_params(df, 5, long_only=True)
-    r15 = sweep_params(df, 15, long_only=True)
-    d0_df = pd.DataFrame(r5 + r15).sort_values('ev', ascending=False)
-    top3 = d0_df.head(3)
-    print(f"\n  Top 3 (d=0):")
-    for i, (_, r) in enumerate(top3.iterrows()):
-        print(f"    {i+1}. {r.bar}m s={r.stop:.2f} {r.session}: EV=${r.ev:.0f}")
+    # ── Phase 1: Sweep all combos with d=0 AND d=1 ────────────────────
+    print(f"\n--- PHASE 1: FULL SWEEP (d=0 + d=1) ---")
+    all_results = []
+    for bar in [5, 15]:
+        for stop in [0.25, 0.50, 0.75, 1.0, 1.5, 2.0]:
+            for sess in ["full", "morning"]:
+                t0 = time.time()
+                d0_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50,
+                                              entry_delay=0, long_only=True)
+                d0_ev = compute_ev(d0_daily)
+                d1_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50,
+                                              entry_delay=1, long_only=True)
+                d1_ev = compute_ev(d1_daily, n_mc=N_MC)
+                deg = (d0_ev["ev"] - d1_ev["ev"]) / abs(d0_ev["ev"]) if d0_ev["ev"] > 0 else 0
+                all_results.append({
+                    "bar": bar, "stop": stop, "session": sess,
+                    "d0_ev": d0_ev["ev"], "d1_ev": d1_ev["ev"], "degradation": deg,
+                    "d1_chal": d1_ev["chal_rate"], "d1_fund": d1_ev["fund_rate"],
+                })
+                elapsed = time.time() - t0
+                print(f"  {bar}m s={stop:.2f} {sess[:5]}: d0=${d0_ev['ev']:>5.0f} d1=${d1_ev['ev']:>5.0f} deg={deg:>+.0%} [{elapsed:.0f}s]")
     
-    # ── Phase 2: Re-test top 3 with d=1 ────────────────────────────────
-    print(f"\n--- PHASE 2: d=1 RETEST ---")
-    d1_results = []
-    for _, r in top3.iterrows():
-        daily = generate_daily_pnl(df, int(r.bar), r.stop, r.session,
-                                   contracts=2, commission=1.50, entry_delay=1, long_only=True)
-        ev = compute_ev(daily, n_mc=N_MC)
-        d1_results.append({"bar": int(r.bar), "stop": r.stop, "session": r.session,
-                           "d0_ev": r.ev, "d1_ev": ev["ev"], "d1_chal": ev["chal_rate"],
-                           "d1_fund": ev["fund_rate"], "d1_live": ev["live_profit"]})
-        print(f"    {int(r.bar)}m s={r.stop:.2f} {r.session}: d0=${r.ev:.0f} → d1=${ev['ev']:.0f}")
-    
-    winner = max(d1_results, key=lambda x: x["d1_ev"])
+    # Rank by d=1 EV (robust execution)
+    ranked = sorted(all_results, key=lambda x: x["d1_ev"], reverse=True)
+    winner = ranked[0]
     bar, stop, sess = winner["bar"], winner["stop"], winner["session"]
     
     print(f"\n{'='*70}")
-    print(f"WINNER: {bar}m stop={stop}×ATR session={sess}")
-    print(f"  d=0 EV=${winner['d0_ev']:.0f}, d=1 EV=${winner['d1_ev']:.0f}")
+    print(f"WINNER (by d=1 EV): {bar}m stop={stop}×ATR session={sess}")
+    print(f"  d=0 EV=${winner['d0_ev']:.0f}, d=1 EV=${winner['d1_ev']:.0f}, degradation={winner['degradation']:.0%}")
     print(f"{'='*70}")
     
     # ── Phase 3: Full robustness ────────────────────────────────────────
