@@ -168,6 +168,7 @@ def generate_daily_pnl(
     tick_value: float = 5.0,
     entry_delay: int = 0,
     long_only: bool = False,
+    vol_filter: float = 0.0,
 ) -> pd.Series:
     """
     Generate daily PnL from VWAP strategy directly (no Trade objects).
@@ -228,6 +229,16 @@ def generate_daily_pnl(
     
     # Map ATR to intraday
     atr = atr_daily[group_id]
+    
+    # Volume filter: compute rolling daily avg volume
+    if vol_filter > 0:
+        daily_avg_vol = np.zeros(group_id[-1] + 1)
+        for g in range(group_id[-1] + 1):
+            mask = group_id == g
+            daily_avg_vol[g] = vol[mask].mean() if mask.any() else 0
+        vol_threshold = daily_avg_vol[group_id] * vol_filter
+    else:
+        vol_threshold = np.zeros(n)
     
     # Session filter
     times = bars.index.time
@@ -294,6 +305,8 @@ def generate_daily_pnl(
         if signal == 0:
             continue
         if long_only and signal == -1:
+            continue
+        if vol_filter > 0 and vol[i] < vol_threshold[i]:
             continue
         
         # Entry delay
@@ -399,10 +412,14 @@ def compute_ev(
     pipeline_rate = chal_rate * fund_rate
     ev = pipeline_rate * withdrawn - fee
     
+    expected_attempts = 1.0 / pipeline_rate if pipeline_rate > 0 else float('inf')
+    
     return {
         "ev": ev,
         "chal_rate": chal_rate,
         "fund_rate": fund_rate,
+        "pipeline_rate": pipeline_rate,
+        "expected_attempts": expected_attempts,
         "live_profit": withdrawn,
         "consistency_pass": consistency_pass,
         "n_days": len(pnl),
@@ -433,6 +450,7 @@ def sweep_params(df: pd.DataFrame, bar_minutes: int, long_only: bool = False) ->
             })
             print(f"  {bar_minutes}m s={stop:.2f} {sess[:5]} → EV=${ev_result['ev']:>7.0f} "
                   f"({ev_result['chal_rate']:.0%}×{ev_result['fund_rate']:.0%} "
+                  f"attempts={ev_result['expected_attempts']:.1f} "
                   f"live=${ev_result['live_profit']:>6.0f} n={len(daily)}) [{elapsed:.0f}s]")
     return results
 
@@ -549,6 +567,9 @@ def main():
     print(f"METRIC chal_pass_rate={rob['base_chal']:.4f}")
     print(f"METRIC fund_pass_rate={rob['base_fund']:.4f}")
     print(f"METRIC chal_fund_ratio={rob['base_chal']/rob['base_fund']:.4f}" if rob['base_fund'] > 0 else "")
+    pipeline_rate = rob['base_chal'] * rob['base_fund']
+    expected_attempts = 1.0 / pipeline_rate if pipeline_rate > 0 else float('inf')
+    print(f"METRIC expected_attempts={expected_attempts:.2f}")
     print(f"METRIC delay1_degradation={rob['d1_deg']:.4f}")
     print(f"METRIC delay2_degradation={rob['d2_deg']:.4f}")
     print(f"METRIC perturb_degradation={rob['perturb_deg']:.4f}")
