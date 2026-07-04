@@ -577,7 +577,7 @@ def main():
     print(f"\n--- PHASE 4: HELD-OUT (2007-2019, d=1) ---")
     df_old = load_nq_data(nq_path, year_start=2007)
     df_old = df_old[df_old.index < "2020-01-01"].copy()
-    heldout = {"ev": 0, "chal_rate": 0, "fund_rate": 0, "live_profit": 0}
+    heldout = {"ev": 0, "chal_rate": 0, "fund_rate": 0, "live_profit": 0, "expected_attempts": 0, "pipeline_rate": 0}
     if len(df_old) > 0:
         val_daily = generate_daily_pnl(df_old, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1, long_only=True, vol_target=True)
         heldout = compute_ev(val_daily, n_mc=N_MC)
