@@ -453,7 +453,7 @@ def compute_ev(
 # Parameter sweep (single-core, but uses vectorized MC)
 # ═══════════════════════════════════════════════════════════════════════
 
-def sweep_params(df: pd.DataFrame, bar_minutes: int, long_only: bool = False) -> list[dict]:
+def sweep_params(df: pd.DataFrame, bar_minutes: int, long_only: bool = False, vol_target: bool = False) -> list[dict]:
     """Sweep stop fractions and sessions for a given bar size. d=0 only."""
     results = []
     for stop in [0.25, 0.50, 0.75, 1.0, 1.5, 2.0]:
@@ -462,7 +462,7 @@ def sweep_params(df: pd.DataFrame, bar_minutes: int, long_only: bool = False) ->
             daily = generate_daily_pnl(
                 df, bar_minutes=bar_minutes, stop_atr_fraction=stop,
                 session=sess, contracts=2, commission=1.50, entry_delay=0,
-                long_only=long_only,
+                long_only=long_only, vol_target=vol_target,
             )
             ev_result = compute_ev(daily)
             elapsed = time.time() - t0
@@ -481,15 +481,15 @@ def sweep_params(df: pd.DataFrame, bar_minutes: int, long_only: bool = False) ->
 # Robustness tests (d=1, d=2 on winning params)
 # ═══════════════════════════════════════════════════════════════════════
 
-def test_robustness(df: pd.DataFrame, bar: int, stop: float, sess: str, long_only: bool = False) -> dict:
+def test_robustness(df: pd.DataFrame, bar: int, stop: float, sess: str, long_only: bool = False, vol_target: bool = False) -> dict:
     """Test robustness: delay 1, delay 2, perturbation."""
-    base_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=0, long_only=long_only)
+    base_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=0, long_only=long_only, vol_target=vol_target)
     base_ev = compute_ev(base_daily)
     
-    d1_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1, long_only=long_only)
+    d1_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1, long_only=long_only, vol_target=vol_target)
     d1_ev = compute_ev(d1_daily)
     
-    d2_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=2, long_only=long_only)
+    d2_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50, entry_delay=2, long_only=long_only, vol_target=vol_target)
     d2_ev = compute_ev(d2_daily)
     
     rng = np.random.default_rng(42)
@@ -539,10 +539,10 @@ def main():
             for sess in ["full", "morning"]:
                 t0 = time.time()
                 d0_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50,
-                                              entry_delay=0, long_only=True)
+                                              entry_delay=0, long_only=True, vol_target=True)
                 d0_ev = compute_ev(d0_daily)
                 d1_daily = generate_daily_pnl(df, bar, stop, sess, contracts=2, commission=1.50,
-                                              entry_delay=1, long_only=True)
+                                              entry_delay=1, long_only=True, vol_target=True)
                 d1_ev = compute_ev(d1_daily, n_mc=N_MC)
                 deg = (d0_ev["ev"] - d1_ev["ev"]) / abs(d0_ev["ev"]) if d0_ev["ev"] > 0 else 0
                 all_results.append({
@@ -565,7 +565,7 @@ def main():
     
     # ── Phase 3: Full robustness ────────────────────────────────────────
     print(f"\n--- PHASE 3: ROBUSTNESS ---")
-    rob = test_robustness(df, bar, stop, sess, long_only=True)
+    rob = test_robustness(df, bar, stop, sess, long_only=True, vol_target=True)
     print(f"  d=0: EV=${rob['base_ev']:.0f} ({rob['base_chal']:.0%}×{rob['base_fund']:.0%})")
     print(f"  d=1: EV=${rob['d1_ev']:.0f} (deg: {rob['d1_deg']:.0%})")
     print(f"  d=2: EV=${rob['d2_ev']:.0f} (deg: {rob['d2_deg']:.0%})")
@@ -579,7 +579,7 @@ def main():
     df_old = df_old[df_old.index < "2020-01-01"].copy()
     heldout = {"ev": 0, "chal_rate": 0, "fund_rate": 0, "live_profit": 0}
     if len(df_old) > 0:
-        val_daily = generate_daily_pnl(df_old, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1, long_only=True)
+        val_daily = generate_daily_pnl(df_old, bar, stop, sess, contracts=2, commission=1.50, entry_delay=1, long_only=True, vol_target=True)
         heldout = compute_ev(val_daily, n_mc=N_MC)
         print(f"  EV=${heldout['ev']:.0f} ({heldout['chal_rate']:.0%}×{heldout['fund_rate']:.0%} "
               f"live=${heldout['live_profit']:.0f} n={len(val_daily)} days)")

@@ -337,6 +337,37 @@ def plot_execution_charts(
         fig4.savefig(output_dir / "monthly_heatmap.png", dpi=150, bbox_inches="tight")
         plt.close(fig4)
         print(f"  Saved monthly_heatmap.png")
+    
+    # ── 7. Per-Trade EV Chart ──────────────────────────────────────────
+    if len(trades_df) > 0:
+        fig5, (ax8, ax9) = plt.subplots(2, 1, figsize=(16, 10), gridspec_kw={"height_ratios": [3, 1]})
+        
+        # Cumulative PnL per trade
+        cum_trade_pnl = trades_df["pnl"].cumsum()
+        trade_colors = ["#4CAF50" if p > 0 else "#F44336" for p in trades_df["pnl"]]
+        
+        ax8.plot(range(len(cum_trade_pnl)), cum_trade_pnl.values, color="#2196F3", linewidth=1.2)
+        ax8.fill_between(range(len(cum_trade_pnl)), 0, cum_trade_pnl.values,
+                        where=cum_trade_pnl.values >= 0, alpha=0.15, color="green")
+        ax8.fill_between(range(len(cum_trade_pnl)), 0, cum_trade_pnl.values,
+                        where=cum_trade_pnl.values < 0, alpha=0.15, color="red")
+        ax8.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
+        ax8.set_title(f"{title_prefix} — Cumulative PnL by Trade #", fontsize=14, fontweight="bold")
+        ax8.set_ylabel("Cumulative PnL ($)")
+        ax8.grid(True, alpha=0.3)
+        
+        # Per-trade PnL bars
+        ax9.bar(range(len(trades_df)), trades_df["pnl"].values, color=trade_colors, width=1.0, alpha=0.7)
+        ax9.axhline(y=0, color="black", linewidth=0.5)
+        ax9.set_title("Per-Trade PnL", fontsize=12)
+        ax9.set_xlabel("Trade #")
+        ax9.set_ylabel("PnL ($)")
+        ax9.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        fig5.savefig(output_dir / "per_trade_ev.png", dpi=150, bbox_inches="tight")
+        plt.close(fig5)
+        print(f"  Saved per_trade_ev.png")
 
     print(f"\n  All charts saved to {output_dir}/")
 
@@ -369,19 +400,29 @@ def main():
 
     # Trade summary
     if len(trades_df) > 0:
-        print(f"\n{'='*50}")
+        trades_df['quantity'] = 2  # contracts per trade
+        trades_df['ev_per_trade'] = trades_df['pnl'] / len(trades_df)  # marginal EV contribution
+        
+        print(f"\n{'='*60}")
         print(f"TRADE SUMMARY")
-        print(f"{'='*50}")
+        print(f"{'='*60}")
         print(f"  EV per pipeline: ${ev['ev']:.0f}")
         print(f"  Expected attempts: {ev['expected_attempts']:.1f}")
         print(f"  Total trades: {len(trades_df)}")
+        print(f"  Contracts per trade: {trades_df['quantity'].iloc[0]}")
         print(f"  Win rate: {(trades_df['pnl'] > 0).mean():.1%}")
         print(f"  Avg win: ${trades_df.loc[trades_df['pnl'] > 0, 'pnl'].mean():,.0f}")
         print(f"  Avg loss: ${trades_df.loc[trades_df['pnl'] <= 0, 'pnl'].mean():,.0f}")
+        print(f"  Avg PnL per trade: ${trades_df['pnl'].mean():,.0f}")
         print(f"  Total PnL: ${trades_df['pnl'].sum():,.0f}")
-        print(f"  Best trade: ${trades_df['pnl'].max():,.0f}")
-        print(f"  Worst trade: ${trades_df['pnl'].min():,.0f}")
-        print(f"  Profit factor: {trades_df.loc[trades_df['pnl'] > 0, 'pnl'].sum() / abs(trades_df.loc[trades_df['pnl'] <= 0, 'pnl'].sum()):.2f}" if (trades_df['pnl'] <= 0).any() else "")
+        print(f"  Best trade: ${trades_df['pnl'].max():,.0f} on {trades_df.loc[trades_df['pnl'].idxmax(), 'entry_time'].strftime('%Y-%m-%d')}")
+        print(f"  Worst trade: ${trades_df['pnl'].min():,.0f} on {trades_df.loc[trades_df['pnl'].idxmin(), 'entry_time'].strftime('%Y-%m-%d')}")
+        pf = trades_df.loc[trades_df['pnl'] > 0, 'pnl'].sum() / abs(trades_df.loc[trades_df['pnl'] <= 0, 'pnl'].sum()) if (trades_df['pnl'] <= 0).any() else float('inf')
+        print(f"  Profit factor: {pf:.2f}")
+        
+        # Save enhanced trade list
+        trades_df.to_csv(output_dir / "trades.csv", index=False)
+        print(f"\n  Saved trades.csv with {len(trades_df)} trades (incl. quantity, ev_per_trade)")
 
 
 if __name__ == "__main__":
