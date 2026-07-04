@@ -163,6 +163,7 @@ def generate_daily_pnl(
     stop_atr_fraction: float = 1.0,
     session: str = "full",
     contracts: int = 2,
+    max_contracts: int = 5,
     commission: float = 1.50,
     tick_size: float = 0.25,
     tick_value: float = 5.0,
@@ -340,7 +341,7 @@ def generate_daily_pnl(
         
         # Vol targeting: scale contracts inversely with ATR
         if vol_target and cur_atr > 0:
-            effective_contracts = max(1, round(contracts * median_atr / cur_atr))
+            effective_contracts = min(max_contracts, max(1, round(contracts * median_atr / cur_atr)))
         else:
             effective_contracts = contracts
         
